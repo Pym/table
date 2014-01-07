@@ -1,7 +1,7 @@
 {
     "name": "pym/table",
     "type": "library",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Dead simple abstraction layer for doctrine/dbal.",
     "homepage": "http://github.com/Pym/table/",
     "keywords": ["database", "doctrine", "dbal"],
