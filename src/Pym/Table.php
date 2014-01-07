@@ -35,7 +35,7 @@ class Table
         if (empty($this->select)) $this->select();
 
         if ($this->isSoftdeletable) {
-            $this->where([$this->table.'.deleted_at' => 'NULL']);
+            $this->where([$this->table.'.deleted_at' => null]);
         }
 
         return $this->buildSQL();
