@@ -117,7 +117,7 @@ class Table
 
             $this->queryParams = array_values($where);
 
-            return ' WHERE ' . implode('AND ', $whereArray);
+            return ' WHERE ' . implode(' AND ', $whereArray);
         }
 
         return '';
