@@ -31,7 +31,17 @@ class Table
         $this->isSoftdeletable = in_array('deleted_at', $tableColumns);
     }
 
-    protected function getQuery()
+    public function getTableName()
+    {
+        return $this->tableName;
+    }
+
+    public function getTableNameOrAlias()
+    {
+        return $this->tableAlias !== null ? $this->tableAlias : '`'.$this->tableName.'`';
+    }
+
+    public function getQuery()
     {
         if (empty($this->select)) $this->select();
 
