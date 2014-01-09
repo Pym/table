@@ -194,6 +194,15 @@ class Table
         return $this->db->fetchAssoc($this->getQuery(), $this->queryParams);
     }
 
+    public function executeQuery($query, array $queryParams = array())
+    {
+        if (count($queryParams) === 0) {
+            $queryParams = $this->queryParams;
+        }
+
+        return $this->db->executeQuery($query, $queryParams);
+    }
+
     public function insert(array $data)
     {
         if ($this->isTimestampable) {
