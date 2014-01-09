@@ -136,12 +136,16 @@ class Table
 
     public function leftJoin($rightTable, $onLeft, $onRight)
     {
-        $rightTable = '`'.$rightTable.'`';
+        $rightTable = explode(' ', $rightTable);
+        $rightTableName = '`'.$rightTable[0].'`';
+        $rightTableAlias = isset($rightTable[1]) ? $rightTable[1] : '';
+
         $this->leftJoin .= sprintf(
-            ' LEFT JOIN %s ON %s = %s',
-            $rightTable,
-            $rightTable.'.`'.$onLeft.'`',
-            $this->table.'.`'.$onRight.'`'
+            ' LEFT JOIN %s %s ON %s = %s',
+            $rightTableName,
+            $rightTableAlias,
+            $onLeft,
+            $onRight
         );
 
         return $this;
