@@ -25,7 +25,7 @@ class Table
         $this->tableName = $tableName;
         $this->tableAlias = $tableAlias;
         $this->tablesAliases = $tablesAliases;
-        $this->table = $this->tableAlias !== null ? $this->tableAlias : '`'.$this->tableName.'`';
+        $this->table = $this->tableAlias !== null ? $this->tableAlias : "`$this->tableName`";
         $tableColumns = $db->executeQuery("DESCRIBE $tableName")->fetchAll(\PDO::FETCH_COLUMN);
         $this->isTimestampable = count(array_intersect(['created_at', 'updated_at'], $tableColumns)) == 2;
         $this->isSoftdeletable = in_array('deleted_at', $tableColumns);
@@ -38,7 +38,7 @@ class Table
 
     public function getTableNameOrAlias()
     {
-        return $this->tableAlias !== null ? $this->tableAlias : '`'.$this->tableName.'`';
+        return $this->tableAlias !== null ? $this->tableAlias : "`$this->tableName`";
     }
 
     public function getQuery()
@@ -58,17 +58,17 @@ class Table
                 if ($matches[2] != '*') {
                     $_matches[] = [];
                     for ($i=1; $i <= 3; $i++) {
-                        $_matches[$i] = '`'.$matches[$i].'`';
+                        $_matches[$i] = "`$matches[$i]`";
                     }
                     $column = isset($matches[3]) ? implode('.', array_slice($_matches, 2)) : $_matches[2];
                     $value = sprintf('%s(%s) AS %s', $matches[1], $column, strtolower($matches[2].'_'.$matches[1]));
                 }
             } elseif (preg_match('/^(\w+)\.(\w+|\*{1})(?:\sAS\s)?(.+)?$/i', $value, $matches)) {
-                $table = in_array($matches[1], $this->tablesAliases) ? $matches[1] : '`'.$matches[1].'`';
+                $table = in_array($matches[1], $this->tablesAliases) ? $matches[1] : "`$matches[1]`";
                 $alias = isset($matches[3]) ? ' AS ' . $matches[3] : ' ';
                 $value = sprintf('%s.%s%s', $table, $matches[2] === '*' ? '*' : "`$matches[2]`", $alias);
             } else {
-                $value = '`'.$value.'`';
+                $value = "`$value`";
             }
         });
 
@@ -78,7 +78,7 @@ class Table
     protected function cleanData(array $data) {
         $keys = array_keys($data);
         array_walk($keys, function(&$value) {
-            $value = '`'.$value.'`';
+            $value = "`$value`";
         });
 
         return array_combine($keys, array_values($data));
@@ -137,7 +137,7 @@ class Table
     public function leftJoin($rightTable, $onLeft, $onRight)
     {
         $rightTable = explode(' ', $rightTable);
-        $rightTableName = '`'.$rightTable[0].'`';
+        $rightTableName = "`$rightTable[0]`";
         $rightTableAlias = isset($rightTable[1]) ? $rightTable[1] : '';
 
         $this->leftJoin .= sprintf(
