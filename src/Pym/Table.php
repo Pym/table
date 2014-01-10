@@ -160,9 +160,20 @@ class Table
 
     public function orderBy(array $columns)
     {
-        $columns = array_combine($this->escapeColumns(array_keys($columns)), $columns);
+        $keys = $values = [];
+        foreach ($columns as $key => $value) {
+            if (is_int($key)) {
+                $keys[] = $value;
+                $values[] = '';
+            } else {
+                $keys[] = $key;
+                $values[] = $value;
+            }
+        }
+
+        $columns = array_combine($this->escapeColumns($keys), $values);
         array_walk($columns, function (&$value, $key) {
-            $value = is_int($key) ? $value : $key . ' ' . $value;
+            $value = $key . (empty($value) ? '' : ' '.$value);
         });
 
         $this->orderBy = sprintf(' ORDER BY %s', implode(', ', $columns));
