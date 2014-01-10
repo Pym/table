@@ -67,7 +67,7 @@ class Table
                 $table = in_array($matches[1], $this->tablesAliases) ? $matches[1] : "`$matches[1]`";
                 $alias = isset($matches[3]) ? ' AS ' . $matches[3] : '';
                 $value = sprintf('%s.%s%s', $table, $matches[2] === '*' ? '*' : "`$matches[2]`", $alias);
-            } else {
+            } elseif (!is_int($value)) {
                 $value = "`$value`";
             }
         });
@@ -160,7 +160,12 @@ class Table
 
     public function orderBy(array $columns)
     {
-        $this->orderBy = sprintf(' ORDER BY %s', implode(', ', $this->escapeColumns($columns)));
+        $columns = array_combine($this->escapeColumns(array_keys($columns)), $columns);
+        array_walk($columns, function (&$value, $key) {
+            $value = is_int($key) ? $value : $key . ' ' . $value;
+        });
+
+        $this->orderBy = sprintf(' ORDER BY %s', implode(', ', $columns));
 
         return $this;
     }
