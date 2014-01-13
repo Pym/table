@@ -9,10 +9,6 @@ class TableEmbed
     protected $db = null;
     protected $table = null;
     protected $embeddedTables = [];
-    protected $embeddedClassName = '';
-    protected $embeddedTableName = '';
-    protected $embeddedAliasName = '';
-    protected $fields = [];
 
     public function __construct(Connection $db, Table $table)
     {
