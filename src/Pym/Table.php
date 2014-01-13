@@ -63,7 +63,7 @@ class Table
                     $column = isset($matches[3]) ? implode('.', array_slice($_matches, 2)) : $_matches[2];
                     $value = sprintf('%s(%s) AS %s', $matches[1], $column, strtolower($matches[2].'_'.$matches[1]));
                 }
-            } elseif (preg_match('/^(\w+)\.(\w+|\*{1})(?:\sAS\s)?(.+)?$/i', $value, $matches)) {
+            } elseif (preg_match('/^(\w+)\.(\w+|\*{1})(?:\s+(?:[aA][sS]\s+)?)?(.+)?$/i', $value, $matches)) {
                 $table = in_array($matches[1], $this->tablesAliases) ? $matches[1] : "`$matches[1]`";
                 $alias = isset($matches[3]) ? ' AS ' . $matches[3] : '';
                 $value = sprintf('%s.%s%s', $table, $matches[2] === '*' ? '*' : "`$matches[2]`", $alias);

@@ -8,6 +8,7 @@ class TableEmbed
 {
     protected $db = null;
     protected $table = null;
+    protected $embeddedTables = [];
     protected $embeddedClassName = '';
     protected $embeddedTableName = '';
     protected $embeddedAliasName = '';
@@ -28,8 +29,9 @@ class TableEmbed
     }
 
     public function add($embeddedClassName, $embeds, array $fields) {
-        $this->embeddedClassName = $embeddedClassName;
-        $this->fields = $fields;
+        $newEmbeddedTable = [];
+        $newEmbeddedTable['class_name'] = $embeddedClassName;
+        $newEmbeddedTable['fields'] = $fields;
 
         $tableName = $this->table->getTableName();
         $tableAlias = $this->table->getTableNameOrAlias();
@@ -60,8 +62,10 @@ class TableEmbed
                 );
         }
 
-        $this->embeddedTableName = $this->getTableName($embedTable);
-        $this->embeddedAliasName = $this->getTableAlias($embedTable);
+        $newEmbeddedTable['table_name'] = $this->getTableName($embedTable);
+        $newEmbeddedTable['alias_name'] = $this->getTableAlias($embedTable);
+
+        $this->embeddedTables[] = $newEmbeddedTable;
 
         return $this;
     }
@@ -71,18 +75,19 @@ class TableEmbed
     }
 
     public function finish() {
+        $columns = [];
+        foreach ($this->embeddedTables as $table) {
+            foreach ($table['fields'] as $field) {
+                $columns[] = sprintf('%s.%s %s_%s', $table['alias_name'], $field, $table['alias_name'], $field);
+            }
+        }
 
-        $this->table->select(array_merge([$this->table->getTableNameOrAlias().'.*'], array_map(function($value) {
-            return sprintf('%s.%s %s_%s', $this->embeddedAliasName, $value, $this->embeddedAliasName, $value);
-        }, $this->fields)));
-
+        $this->table->select(array_merge([$this->table->getTableNameOrAlias().'.*'], $columns));
         $result = $this->table->executeQuery($this->table->getQuery())->fetch(\PDO::FETCH_NAMED);
 
-        $prefix = $this->embeddedAliasName.'_';
-
-        $prepareData = function($index = null) use (&$result, $prefix) {
+        $prepareData = function($prefix, $index = null) use (&$result, &$table) {
             $object = [];
-            foreach ($this->fields as $field) {
+            foreach ($table['fields'] as $field) {
                 if ($index === null) {
                     $object[$field] = $result[$prefix.$field];
                     unset($result[$prefix.$field]);
@@ -95,18 +100,22 @@ class TableEmbed
             return $object;
         };
 
-        $objects = [];
-        $id_field = $prefix.$this->fields[0];
-        if (is_array($result[$id_field])) {
-            $count = count($result[$id_field]);
-            for ($i = 0; $i < $count; $i++) {
-                $collection[] = new $this->embeddedClassName($prepareData($i));
+        foreach ($this->embeddedTables as $table) {
+            $collection = [];
+            $prefix = $table['alias_name'].'_';
+            $id_field = $prefix.$table['fields'][0];
+            if ($result[$id_field] !== null) {
+                if (is_array($result[$id_field])) {
+                    $count = count($result[$id_field]);
+                    for ($i = 0; $i < $count; $i++) {
+                        $collection[] = new $table['class_name']($prepareData($prefix, $i));
+                    }
+                } else {
+                    $collection[] = new $table['class_name']($prepareData($prefix));
+                }
+                $result[$table['table_name'].'s'] = $collection;
             }
-        } else {
-            $collection[] = new $this->embeddedClassName($prepareData());
         }
-
-        $result[$this->embeddedTableName.'s'] = $collection;
 
         return $result;
     }
