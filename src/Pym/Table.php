@@ -13,7 +13,7 @@ class Table
     protected $isSoftdeletable = false;
     protected $queryParams = array();
 
-    protected $select = '';
+    protected $selects = array();
     protected $wheres = array();
     protected $leftJoin = '';
     protected $groupBy = '';
@@ -43,8 +43,6 @@ class Table
 
     public function getQuery()
     {
-        if (empty($this->select)) $this->select();
-
         if ($this->isSoftdeletable) {
             $this->where([$this->table.'.deleted_at' => null]);
         }
@@ -86,25 +84,35 @@ class Table
 
     protected function buildSQL()
     {
-        $sql = $this->select . $this->leftJoin . $this->buildWhere() . $this->groupBy . $this->orderBy;
+        $sql = $this->buildSelect() . $this->leftJoin . $this->buildWhere() . $this->groupBy . $this->orderBy;
 
-        $this->select = $this->leftJoin = $this->groupBy = $this->orderBy = '';
-        $this->wheres = [];
+        $this->leftJoin = $this->groupBy = $this->orderBy = '';
+        $this->selects = $this->wheres = [];
 
         return $sql;
     }
 
-    public function select($columns = null)
+    public function select($columns)
     {
-        if ($columns === null) {
-            $select = '*';
+        if (is_array($columns)) {
+            foreach ($columns as $column) {
+                $this->selects[] = $column;
+            }
         } else {
-            $select = implode(', ', $this->escapeColumns(is_array($columns) ? $columns : [$columns]));
+            $this->selects[] = $columns;
         }
 
-        $this->select = sprintf('SELECT %s FROM `%s` %s', $select, $this->tableName, $this->tableAlias);
-
         return $this;
+    }
+
+    protected function buildSelect()
+    {
+        return sprintf(
+            'SELECT %s FROM `%s` %s',
+                count($this->selects) ? implode(', ', $this->escapeColumns(array_unique($this->selects))) : '*',
+                $this->tableName,
+                $this->tableAlias
+        );
     }
 
     public function where(array $where)
