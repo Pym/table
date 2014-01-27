@@ -18,6 +18,7 @@ class Table
     protected $leftJoin = '';
     protected $groupBy = '';
     protected $orderBy = '';
+    protected $limit = '';
 
     public function __construct(Connection $db, $tableName, $tableAlias = null, $tablesAliases = null)
     {
@@ -84,9 +85,9 @@ class Table
 
     protected function buildSQL()
     {
-        $sql = $this->buildSelect() . $this->leftJoin . $this->buildWhere() . $this->groupBy . $this->orderBy;
+        $sql = $this->buildSelect() . $this->leftJoin . $this->buildWhere() . $this->groupBy . $this->orderBy . $this->limit;
 
-        $this->leftJoin = $this->groupBy = $this->orderBy = '';
+        $this->leftJoin = $this->groupBy = $this->orderBy = $this->limit = '';
         $this->selects = $this->wheres = [];
 
         return $sql;
@@ -185,6 +186,13 @@ class Table
         });
 
         $this->orderBy = sprintf(' ORDER BY %s', implode(', ', $columns));
+
+        return $this;
+    }
+
+    public function limit($start, $end = null)
+    {
+        $this->limit = sprintf(' LIMIT %s%s', $start, $end === null ?: ", $end");
 
         return $this;
     }
