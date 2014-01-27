@@ -66,7 +66,7 @@ class Table
                 $table = in_array($matches[1], $this->tablesAliases) ? $matches[1] : "`$matches[1]`";
                 $alias = isset($matches[3]) ? ' AS ' . $matches[3] : '';
                 $value = sprintf('%s.%s%s', $table, $matches[2] === '*' ? '*' : "`$matches[2]`", $alias);
-            } elseif (!is_int($value)) {
+            } elseif (!is_int($value) && !preg_match('/^\w+\s\*$/i', $value)) {
                 $value = "`$value`";
             }
         });
