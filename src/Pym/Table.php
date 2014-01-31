@@ -116,28 +116,47 @@ class Table
         );
     }
 
-    public function where(array $where)
+    public function where(array $where, $operator = 'AND')
     {
+        $collection = [];
         foreach ($where as $key => $value) {
-            $this->wheres[$key] = $value;
+            $collection[$key] = $value;
         }
 
+        $this->wheres[] = [
+            'operator'   => $operator,
+            'collection' => $collection
+        ];
+
         return $this;
+    }
+
+    public function orWhere(array $where)
+    {
+        return $this->where($where, 'OR');
     }
 
     protected function buildWhere()
     {
         if (count($this->wheres)) {
-            $where = array_combine($this->escapeColumns(array_keys($this->wheres)), $this->wheres);
+            $wheres = array_combine($this->escapeColumns(array_keys($this->wheres)), $this->wheres);
 
-            $whereArray = [];
-            foreach ($where as $key => $value) {
-                $whereArray[] = sprintf('%s %s ?', $key, $value === null ? 'IS' : '=');
+            $whereList = [];
+            foreach ($wheres as $where) {
+                $currentWhereCollection = [];
+
+                foreach ($where['collection'] as $key => $value) {
+                    $currentWhereCollection[] = sprintf('%s %s ?', $key, $value === null ? 'IS' : '=');
+                }
+
+                $currentWhereString = implode(sprintf(' %s ', $where['operator']), $currentWhereCollection);
+                if ($where['operator'] === 'OR') $currentWhereString = "($currentWhereString)";
+
+                $whereList[] = $currentWhereString;
+                $this->queryParams = array_merge($this->queryParams, array_values($where['collection']));
             }
 
-            $this->queryParams = array_values($where);
-
-            return ' WHERE ' . implode(' AND ', $whereArray);
+            return ' WHERE ' . implode(' AND ', $whereList);
         }
 
         return '';
