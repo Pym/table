@@ -239,7 +239,7 @@ class Table
         return $this->db->executeQuery($query, $queryParams);
     }
 
-    public function insert(array $data)
+    public function insert(array $data, $returnAffectedRowsCount = false)
     {
         if ($this->isTimestampable) {
             $now = get_object_vars(new \DateTime('now'))['date'];
@@ -247,7 +247,9 @@ class Table
             $data['updated_at'] = $now;
         }
 
-        return $this->db->insert($this->tableName, $this->cleanData($data));
+        $affectedRowsCount = $this->db->insert($this->tableName, $this->cleanData($data);
+
+        return $returnAffectedRowsCount ? $affectedRowsCount : $this->db->lastInsertId();
     }
 
     public function update(array $data, array $where)
