@@ -247,7 +247,7 @@ class Table
             $data['updated_at'] = $now;
         }
 
-        $affectedRowsCount = $this->db->insert($this->tableName, $this->cleanData($data);
+        $affectedRowsCount = $this->db->insert($this->tableName, $this->cleanData($data));
 
         return $returnAffectedRowsCount ? $affectedRowsCount : $this->db->lastInsertId();
     }
