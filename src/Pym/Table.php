@@ -53,19 +53,20 @@ class Table
 
     protected function escapeColumns(array $columns) {
         array_walk($columns, function(&$value) {
+            $escapaUnlessIsTableAlias = function($value) {
+                return in_array($value, $this->tablesAliases) ? $value : "`$value`";
+            };
             if (preg_match('/^(\w+)\((\*|\w+)\.?(\w+)?\)$/i', $value, $matches)) {
-                if ($matches[2] != '*') {
-                    $_matches[] = [];
-                    for ($i=1; $i <= 3; $i++) {
-                        $_matches[$i] = "`$matches[$i]`";
-                    }
-                    $column = isset($matches[3]) ? implode('.', array_slice($_matches, 2)) : $_matches[2];
+                if ($matches[2] === '*') {
+                    $value = sprintf('%s(*) AS %s', $matches[1], strtolower($this->tableAlias.'_'.$matches[1]));
+                } else {
+                    $table = $escapaUnlessIsTableAlias($matches[2]);
+                    $column = isset($matches[3]) ? "$table.`$matches[3]`" : $table;
                     $value = sprintf('%s(%s) AS %s', $matches[1], $column, strtolower($matches[2].'_'.$matches[1]));
                 }
             } elseif (preg_match('/^(\w+)\.(\w+|\*{1})(?:\s+(?:[aA][sS]\s+)?)?(.+)?$/i', $value, $matches)) {
-                $table = in_array($matches[1], $this->tablesAliases) ? $matches[1] : "`$matches[1]`";
                 $alias = isset($matches[3]) ? ' AS ' . $matches[3] : '';
-                $value = sprintf('%s.%s%s', $table, $matches[2] === '*' ? '*' : "`$matches[2]`", $alias);
+                $value = sprintf('%s.%s%s', $escapaUnlessIsTableAlias($matches[1]), $matches[2] === '*' ? '*' : "`$matches[2]`", $alias);
             } elseif (!is_int($value) && !preg_match('/^\w+\s\*$/i', $value)) {
                 $value = "`$value`";
             }
