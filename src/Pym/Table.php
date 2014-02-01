@@ -20,16 +20,18 @@ class Table
     protected $orderBy = '';
     protected $limit = '';
 
-    public function __construct(Connection $db, $tableName, $tableAlias = null, $tablesAliases = null)
+    public function __construct(Connection $db = null, $tableName, $tableAlias = null, $tablesAliases = null)
     {
         $this->db = $db;
         $this->tableName = $tableName;
         $this->tableAlias = $tableAlias;
         $this->tablesAliases = $tablesAliases;
         $this->table = $this->tableAlias !== null ? $this->tableAlias : "`$this->tableName`";
-        $tableColumns = $db->executeQuery("DESCRIBE $tableName")->fetchAll(\PDO::FETCH_COLUMN);
-        $this->isTimestampable = count(array_intersect(['created_at', 'updated_at'], $tableColumns)) == 2;
-        $this->isSoftdeletable = in_array('deleted_at', $tableColumns);
+        if ($db !== null) {
+            $tableColumns = $db->executeQuery("DESCRIBE $tableName")->fetchAll(\PDO::FETCH_COLUMN);
+            $this->isTimestampable = count(array_intersect(['created_at', 'updated_at'], $tableColumns)) == 2;
+            $this->isSoftdeletable = in_array('deleted_at', $tableColumns);
+        }
     }
 
     public function getTableName()
