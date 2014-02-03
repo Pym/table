@@ -141,6 +141,8 @@ class Table
 
     protected function buildWhere()
     {
+        $this->queryParams = [];
+
         if (count($this->wheres)) {
             $wheres = array_combine($this->escapeColumns(array_keys($this->wheres)), $this->wheres);
 
