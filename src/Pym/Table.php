@@ -113,7 +113,7 @@ class Table
     {
         return sprintf(
             'SELECT %s FROM `%s` %s',
-                count($this->selects) ? implode(', ', $this->escapeColumns(array_unique($this->selects))) : '*',
+                count($this->selects) ? implode(', ', $this->escapeColumns($this->selects)) : '*',
                 $this->tableName,
                 $this->tableAlias
         );
