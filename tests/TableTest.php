@@ -51,6 +51,13 @@ class TableTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u WHERE (name = ? OR username = ?)');
     }
 
+    public function testWhereLike()
+    {
+        $this->testTable->where(['name' => 'foo bar', 'username' => ['LIKE' => '"foo%"']]);
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u WHERE name = ? AND username LIKE ?');
+    }
+
     public function testLimit()
     {
         $this->testTable->limit(10);
