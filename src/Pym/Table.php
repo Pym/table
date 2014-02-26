@@ -150,8 +150,20 @@ class Table
             foreach ($wheres as $where) {
                 $currentWhereCollection = [];
 
-                foreach ($where['collection'] as $key => $value) {
-                    $currentWhereCollection[] = sprintf('%s %s ?', $key, $value === null ? 'IS' : '=');
+                foreach ($where['collection'] as $key => &$value) {
+                    switch (true) {
+                        case is_array($value):
+                            $operator = key($value);
+                            $value = $value[$operator];
+                            break;
+                        case $value === null:
+                            $operator = 'IS';
+                            break;
+                        default:
+                            $operator = '=';
+                            break;
+                    }
+                    $currentWhereCollection[] = sprintf('%s %s ?', $key, $operator);
                 }
 
                 $currentWhereString = implode(sprintf(' %s ', $where['operator']), $currentWhereCollection);
