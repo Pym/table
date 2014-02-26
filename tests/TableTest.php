@@ -46,9 +46,23 @@ class TableTest extends PHPUnit_Framework_TestCase
 
     public function testOrWhere()
     {
-        $this->testTable->orWhere(['name' => 'foo bar', 'usernasme' => 'foo']);
+        $this->testTable->orWhere(['name' => 'foo bar', 'username' => 'foo']);
 
-        $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u WHERE (name = ? OR usernasme = ?)');
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u WHERE (name = ? OR username = ?)');
+    }
+
+    public function testLimit()
+    {
+        $this->testTable->limit(10);
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u LIMIT 10');
+    }
+
+    public function testLimit2()
+    {
+        $this->testTable->limit(0, 10);
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u LIMIT 0, 10');
     }
 
     public function testCount()

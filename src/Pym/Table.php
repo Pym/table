@@ -228,7 +228,7 @@ class Table
 
     public function limit($start, $end = null)
     {
-        $this->limit = sprintf(' LIMIT %s%s', $start, $end === null ?: ", $end");
+        $this->limit = sprintf(' LIMIT %s', $end === null ? $start : "$start, $end");
 
         return $this;
     }
