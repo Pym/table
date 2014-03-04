@@ -20,11 +20,53 @@ class TableTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u');
     }
 
-    public function testSelect()
+    public function testSelectColumns()
     {
         $this->testTable->select(['name', 'username']);
 
         $this->assertEquals($this->testTable->getQuery(), 'SELECT `name`, `username` FROM `user` u');
+    }
+
+    public function testSelectAllUsers()
+    {
+        $this->testTable->select('u.*');
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT u.* FROM `user` u');
+    }
+
+    public function testSelectAlias()
+    {
+        $this->testTable->select(['name', 'username login']);
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT `name`, `username` AS login FROM `user` u');
+    }
+
+    public function testSelectAlias2()
+    {
+        $this->testTable->select(['name', 'username AS login']);
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT `name`, `username` AS login FROM `user` u');
+    }
+
+    public function testSelectFunctionCalc()
+    {
+        $this->testTable->select('SQL_CALC_FOUND_ROWS *');
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT SQL_CALC_FOUND_ROWS * FROM `user` u');
+    }
+
+    public function testSelectFunctionDateAutoAlias()
+    {
+        $this->testTable->select('DATE(u.created_at)');
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT DATE(u.`created_at`) AS u_date FROM `user` u');
+    }
+
+    public function testSelectFunctionDateAlias()
+    {
+        $this->testTable->select('DATE(u.created_at) AS creation_date');
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT DATE(u.`created_at`) AS creation_date FROM `user` u');
     }
 
     public function testSelectWithLeftJoin()

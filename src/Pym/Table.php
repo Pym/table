@@ -55,22 +55,18 @@ class Table
 
     protected function escapeColumns(array $columns) {
         array_walk($columns, function(&$value) {
-            $escapaUnlessIsTableAlias = function($value) {
-                return in_array($value, $this->tablesAliases) ? $value : "`$value`";
+            $escapeColumn = function($value, $noAutoAlias = false) {
+                return preg_replace_callback('/(\*|\w+)(\))?$/i', function ($matches) use ($value, $noAutoAlias) {
+                    if (!$noAutoAlias && isset($matches[2]) && $matches[2] === ')' && preg_match('/^(\w+)\((\w+)?/i', $value, $alias)) {
+                        $alias = ' AS ' . strtolower((isset($alias[2]) ? $alias[2] : $this->tableAlias).'_'.$alias[1]);
+                    }
+                    return sprintf('%s%s%s', $matches[1] === '*' ? '*' : "`$matches[1]`", isset($matches[2]) ? $matches[2] : '', isset($alias) ? $alias : '');
+                }, $value);
             };
-            if (preg_match('/^(\w+)\((\*|\w+)\.?(\w+)?\)$/i', $value, $matches)) {
-                if ($matches[2] === '*') {
-                    $value = sprintf('%s(*) AS %s', $matches[1], strtolower($this->tableAlias.'_'.$matches[1]));
-                } else {
-                    $table = $escapaUnlessIsTableAlias($matches[2]);
-                    $column = isset($matches[3]) ? "$table.`$matches[3]`" : $table;
-                    $value = sprintf('%s(%s) AS %s', $matches[1], $column, strtolower($matches[2].'_'.$matches[1]));
-                }
-            } elseif (preg_match('/^(\w+)\.(\w+|\*{1})(?:\s+(?:[aA][sS]\s+)?)?(.+)?$/i', $value, $matches)) {
-                $alias = isset($matches[3]) ? ' AS ' . $matches[3] : '';
-                $value = sprintf('%s.%s%s', $escapaUnlessIsTableAlias($matches[1]), $matches[2] === '*' ? '*' : "`$matches[2]`", $alias);
-            } elseif (!is_int($value) && !preg_match('/^\w+\s\*$/i', $value)) {
-                $value = "`$value`";
+            if (preg_match('/^(\w+(?:(?:\((?:\*|\w+(?:\.\w+))\)|\.\w+))?)\s+(?:[aA][sS]\s+)?(\w+)$/i', $value, $matches)) {
+                $value = sprintf('%s AS %s', $escapeColumn($matches[1], true), $matches[2]);
+            } else {
+                $value = $escapeColumn($value);
             }
         });
 
