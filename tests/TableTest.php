@@ -100,6 +100,14 @@ class TableTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u WHERE name = ? AND username LIKE ?');
     }
 
+    public function testWhereIn()
+    {
+        $this->testTable->where(['value' => ['IN' => ['1', '2' ,'3']]]);
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u WHERE value IN (?, ?, ?)');
+        $this->assertEquals($this->testTable->getQueryParams(), ['1', '2', '3']);
+    }
+
     public function testLimit()
     {
         $this->testTable->limit(10);

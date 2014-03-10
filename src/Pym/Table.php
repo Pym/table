@@ -53,6 +53,16 @@ class Table
         return $this->buildSQL();
     }
 
+    public function getQueryParams()
+    {
+        $flattenQueryParams = [];
+        array_walk_recursive($this->queryParams, function($a) use (&$flattenQueryParams) {
+            $flattenQueryParams[] = $a;
+        });
+
+        return $flattenQueryParams;
+    }
+
     protected function escapeColumns(array $columns) {
         array_walk($columns, function(&$value) {
             $escapeColumn = function($value, $noAutoAlias = false) {
@@ -159,13 +169,18 @@ class Table
                             $operator = '=';
                             break;
                     }
-                    $currentWhereCollection[] = sprintf('%s %s ?', $key, $operator);
+                    $currentWhereCollection[] = sprintf('%s %s %s',
+                        $key,
+                        $operator,
+                        strtoupper($operator) === 'IN' ? '('.implode(', ', array_fill(0, count($value), '?')).')' : '?')
+                    ;
                 }
 
                 $currentWhereString = implode(sprintf(' %s ', $where['operator']), $currentWhereCollection);
                 if ($where['operator'] === 'OR') $currentWhereString = "($currentWhereString)";
 
                 $whereList[] = $currentWhereString;
+
                 $this->queryParams = array_merge($this->queryParams, array_values($where['collection']));
             }
 
@@ -240,17 +255,17 @@ class Table
     {
         if (count($where)) $this->where($where);
 
-        return $this->db->fetchAll($this->getQuery(), $this->queryParams);
+        return $this->db->fetchAll($this->getQuery(), $this->getQueryParams());
     }
 
     public function fetchAllKeyPair()
     {
-        return $this->db->executeQuery($this->getQuery(), $this->queryParams)->fetchAll(\PDO::FETCH_KEY_PAIR);
+        return $this->db->executeQuery($this->getQuery(), $this->getQueryParams())->fetchAll(\PDO::FETCH_KEY_PAIR);
     }
 
     public function fetchAllKeyPairs()
     {
-        $results = $this->db->executeQuery($this->getQuery(), $this->queryParams)->fetchAll(\PDO::FETCH_GROUP|\PDO::FETCH_ASSOC);
+        $results = $this->db->executeQuery($this->getQuery(), $this->getQueryParams())->fetchAll(\PDO::FETCH_GROUP|\PDO::FETCH_ASSOC);
 
         return array_map('reset', $results);
     }
@@ -259,13 +274,13 @@ class Table
     {
         if (count($where)) $this->where($where);
 
-        return $this->db->fetchAssoc($this->getQuery(), $this->queryParams);
+        return $this->db->fetchAssoc($this->getQuery(), $this->getQueryParams());
     }
 
     public function executeQuery($query, array $queryParams = array())
     {
         if (count($queryParams) === 0) {
-            $queryParams = $this->queryParams;
+            $queryParams = $this->getQueryParams();
         }
 
         return $this->db->executeQuery($query, $queryParams);
@@ -306,5 +321,4 @@ class Table
     {
         return $this->db->query(sprintf('DELETE FROM `%s`', $this->tableName));
     }
-
 }
