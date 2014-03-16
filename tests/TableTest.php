@@ -108,6 +108,14 @@ class TableTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($this->testTable->getQueryParams(), ['1', '2', '3']);
     }
 
+    public function testWhereAndSameColumn()
+    {
+        $this->testTable->where(['name' => ['foo', ['<>' => 'bar']]]);
+
+        $this->assertEquals($this->testTable->getQuery(), 'SELECT * FROM `user` u WHERE name = ? AND name <> ?');
+        $this->assertEquals($this->testTable->getQueryParams(), ['foo', 'bar']);
+    }
+
     public function testLimit()
     {
         $this->testTable->limit(10);

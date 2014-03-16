@@ -129,7 +129,14 @@ class Table
     {
         $collection = [];
         foreach ($where as $key => $value) {
-            $collection[$key] = $value;
+            if (!isset($value)) $collection[$key] = [];
+            if (is_array($value) && count($value) > 1) {
+                foreach ($value as $val) {
+                    $collection[$key][] = $val;
+                }
+            } else {
+                $collection[$key][] = $value;
+            }
         }
 
         $this->wheres[] = [
@@ -155,25 +162,26 @@ class Table
             $whereList = [];
             foreach ($wheres as $where) {
                 $currentWhereCollection = [];
-
-                foreach ($where['collection'] as $key => &$value) {
-                    switch (true) {
-                        case is_array($value):
-                            $operator = key($value);
-                            $value = $value[$operator];
-                            break;
-                        case $value === null:
-                            $operator = 'IS';
-                            break;
-                        default:
-                            $operator = '=';
-                            break;
+                foreach ($where['collection'] as $key => &$collection) {
+                    foreach ($collection as &$value) {
+                        switch (true) {
+                            case is_array($value):
+                                $operator = key($value);
+                                $value = $value[$operator];
+                                break;
+                            case $value === null:
+                                $operator = 'IS';
+                                break;
+                            default:
+                                $operator = '=';
+                                break;
+                        }
+                        $currentWhereCollection[] = sprintf('%s %s %s',
+                            $key,
+                            $operator,
+                            strtoupper($operator) === 'IN' ? '('.implode(', ', array_fill(0, count($value), '?')).')' : '?')
+                        ;
                     }
-                    $currentWhereCollection[] = sprintf('%s %s %s',
-                        $key,
-                        $operator,
-                        strtoupper($operator) === 'IN' ? '('.implode(', ', array_fill(0, count($value), '?')).')' : '?')
-                    ;
                 }
 
                 $currentWhereString = implode(sprintf(' %s ', $where['operator']), $currentWhereCollection);
