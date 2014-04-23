@@ -27,7 +27,7 @@ class Table
         $this->tableAlias = $tableAlias;
         $this->tablesAliases = $tablesAliases;
         $this->table = $this->tableAlias !== null ? $this->tableAlias : "`$this->tableName`";
-        if ($db !== null) {
+        if ($db !== null && $db->getParams()['driver'] !== 'pdo_sqlite') {
             $tableColumns = $db->executeQuery("DESCRIBE $tableName")->fetchAll(\PDO::FETCH_COLUMN);
             $this->isTimestampable = count(array_intersect(['created_at', 'updated_at'], $tableColumns)) == 2;
             $this->isSoftdeletable = in_array('deleted_at', $tableColumns);
