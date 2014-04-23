@@ -294,15 +294,35 @@ class Table
         return $this->db->executeQuery($query, $queryParams);
     }
 
-    public function insert(array $data, $returnAffectedRowsCount = false)
+    private function setTimestampsForData(&$data)
     {
         if ($this->isTimestampable) {
             $now = get_object_vars(new \DateTime('now'))['date'];
             $data['created_at'] = $now;
             $data['updated_at'] = $now;
         }
+    }
 
+    public function insert(array $data, $returnAffectedRowsCount = false)
+    {
+        $this->setTimestampsForData($data);
         $affectedRowsCount = $this->db->insert($this->tableName, $this->cleanData($data));
+
+        return $returnAffectedRowsCount ? $affectedRowsCount : $this->db->lastInsertId();
+    }
+
+    public function insertIgnore(array $data, $returnAffectedRowsCount = false)
+    {
+        $this->setTimestampsForData($data);
+        $affectedRowsCount = $this->db->executeUpdate(
+            sprintf('INSERT %s INTO %s (%s) VALUES (%s)',
+                $this->db->getParams()['driver'] === 'pdo_sqlite' ? 'OR IGNORE' : 'IGNORE',
+                $this->tableName,
+                implode(', ', array_keys($data)),
+                implode(', ', array_fill(0, count($data), '?'))
+            ),
+            array_values($data)
+        );
 
         return $returnAffectedRowsCount ? $affectedRowsCount : $this->db->lastInsertId();
     }
