@@ -34,6 +34,11 @@ class Table
         }
     }
 
+    public function getConnection()
+    {
+        return $this->db;
+    }
+
     public function getTableName()
     {
         return $this->tableName;

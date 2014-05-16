@@ -1,18 +1,15 @@
 <?php
 namespace Pym;
 
-use Doctrine\DBAL\Connection;
 use Pym\Table;
 
 class TableEmbed
 {
-    protected $db = null;
     protected $table = null;
     protected $embeddedTables = [];
 
-    public function __construct(Connection $db, Table $table)
+    public function __construct(Table $table)
     {
-        $this->db = $db;
         $this->table = $table;
     }
 
@@ -115,5 +112,4 @@ class TableEmbed
 
         return $result;
     }
-
 }
